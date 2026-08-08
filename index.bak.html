@@ -9,41 +9,7 @@
     <title>HTML 5 Boilerplate</title>
     <style>
 
-	#left {
-          position:absolute;
-          width:370px;
-          top:0px;
-          bottom:0px;
-          left:-330px;
-          z-index:999;
-          transition: left 1s;
-          display:flex;
-	}
-	#left.shown {
-          left:0px;
-          transition: left 1s;
-	}
-	#leftContent { background: #cab; }
-	
-	#right {
-          position:absolute;
-          width:370px;
-          top:0px;
-          bottom:0px;
-          right:-330px;
-          z-index:999;
-          transition: right 1s;
-          display:flex;
-	}
-	#right.shown {
-          right:0px;
-          transition: right 1s;
-	}
-	#rightContent { 
-	  background: #cab;
-	  width: inherit;
-	}
-	
+	#main { padding:0em;height:98vh;background:#EEE; position:relative; }
         #bottom { 
           position: absolute;
           height: 180px;
@@ -59,7 +25,7 @@
           transition: bottom 1s;
         }
         
-        #viewer { width:100%;height:100%;margin:0 20px; }
+        #viewer { width:500px;height:500px; }
         
         .card { width:110px;height:110px;display:inline-block;text-align: center; }
         .card img { max-width:90%; max-height:90%; }
@@ -70,37 +36,36 @@
         #myannoform {
           display: flex;
           flex-direction: column;
-          margin: 1em;
         }
 
-	#modal {
-          position:absolute;
-          top:0;
-          bottom:0;
-          right:0;
-          left:0;
-          background:rgba(0,0,0,0.6);
-          display:none;
-          z-index:999;
-	}
-	#modalContent {
-          position:absolute;
-          top:4rem;
-          left:10vw;
-          height:700px;
-          width:80vw;
-          background:white;
-          border-radius:20px;
-	}
-	#tbl, #tbr { 
-          font-size: 2em;
-          background: black;
-          color: white;
-          padding: 4px 12px;
-          text-decoration:none;
-	}
-	#tbl { border-radius: 0 2em 2em 0; }
-        #tbr { border-radius: 2em 0 0 2em; }
+	/********** columns ************/
+
+
+	  /* default - left and middle */
+	  #main #left   { width:25%;left:0%; }
+	  #main #middle { width:75%;left:25%;}
+	  #main #right  { width:25%;left:100%; background:#EED;}
+	  
+	  
+	  /*view1 - middle only */
+	  #main.v1 #left   { width:25%;left:-25%;}
+	  #main.v1 #middle { width:100%;left:0%; }
+	  #main.v1 #right  { width:25%;left:100%;background:#EED; }
+
+	  /*view2 - all three */
+	  #main.v2 #left   { width:25%;left:0%; }
+	  #main.v2 #middle { width:50%;left:25%; }
+	  #main.v2 #right  { width:25%;left:75%;background:#EED; }
+	   
+	  /*view3 - middle and right*/
+	  #main.v3 #left   { width:25%;left:-25%; }
+	  #main.v3 #middle { width:75%;left:0%;}
+	  #main.v3 #right  { width:25%;left:75%;background:#EED; }  
+
+	#left-content { margin:1em; }
+	#right-content { margin:1em 2em 1em 1em; }
+
+	#left,#middle,#right { position:absolute;top:0px;bottom:0px;transition: left 1s, width 1s; }
     
     </style>
   </head>
@@ -131,27 +96,31 @@
         var container = document.getElementById(this.divId);
         if(!container.style.width) { container.style.width = "100%"; }
         if(!container.style.height) { container.style.height = "100vh"; }
-        container.style.position = "relative";
-        this.ui.viewerContainer = document.createElement("div");
-        this.ui.viewerContainer.id = "viewer";
-        container.appendChild(this.ui.viewerContainer);
         
-        this.ui.bottom = this.domElement('div',"bottom", {}, container);
-        this.ui.left =   this.domElement('div',"left", {}, container);
-        this.ui.leftContent = this.domElement('div',"leftContent", {}, this.ui.left);
-        this.ui.leftHandle = this.domElement('div',"leftHandle", {}, this.ui.left);
-        this.ui.right = this.domElement('div',"right", {}, container);
-        this.ui.rightHandle = this.domElement('div',"rightHandle", {}, this.ui.right); 
-        this.ui.rightContent = this.domElement('div',"rightContent", {}, this.ui.right);
-
+        var top = document.createElement("div");
+        top.id = "main";
+        top.classList.add('v');
+        this.ui.main = top;
+        container.appendChild(top);
+        
+        var bottom = document.createElement("div");
+        bottom.id = "bottom";
+        this.ui.bottom = bottom;
+        container.appendChild(bottom);
+        
         this.ui.slider = this.domElement('div',"slider", {}, bottom);
         
-        this.ui.modal = this.domElement('div',"modal", {}, container);
-        /*
         var modal = document.createElement("div");
         modal.id = "modal";
         this.ui.modal = modal;
-
+        this.ui.modal.style.position = "absolute";
+        this.ui.modal.style.top = "4rem";
+        this.ui.modal.style.left = "10vw";
+        this.ui.modal.style.height = "700px";
+        this.ui.modal.style.width = "80vw";
+        this.ui.modal.style.background = "white";
+        this.ui.modal.style['border-radius'] = "20px";
+        this.ui.modal.style.display = "none";
         container.appendChild(modal);
  
         var toolbar = document.createElement("div");
@@ -166,9 +135,20 @@
         this.ui.close.src = "assets/images/close.svg";
         this.ui.close.addEventListener("click", (e) => this.closeModal());
         toolbar.appendChild(this.ui.close);
-*/       
+        
+        
+        var left = document.createElement("div");
+        left.id = "left";
+        top.appendChild(left);
+        
+        var middle = document.createElement("div");
+        middle.id = "middle";
+        top.appendChild(middle);
+        
+        var right = document.createElement("div");
+        right.id = "right";
 
-        var annoform          = this.domElement('div',"myannoform", {}, rightContent);
+        var annoform          = this.domElement('div',"myannoform", {}, right);
         this.ui.annoregion    = this.domElement('input',"annoregion", {"type":"text"}, annoform);
         this.ui.annopreview   = this.domElement('div', "annopreview",{}, annoform);
         this.ui.annotext      = this.domElement('textarea',"annotext", {}, annoform);
@@ -179,23 +159,37 @@
         this.ui.annosubmit    = this.domElement('input',"submit",{"type":"submit","value":"Create"}, annobuttons);
 
  
-        //top.appendChild(right);
-        
-        var b1    = this.domElement('button',"b1",{"value":"OpenLeft"}, this.ui.bottom);
+        top.appendChild(right);
         
         
         // temporary
         var button1 = document.createElement("button");
-        button1.innerText = "Show/Hide Right";
-        button1.addEventListener("click", (e) => this.openRight());
+        button1.classList.add("dov1");
+        button1.innerText = "Layout 1";
+        button1.addEventListener("click", (e) => this.setLayout('v'));
         bottom.appendChild(button1);
-        //this.ui['button5'] = button5;
-        
+        //this.ui['button1'] = button1;
+
         var button2 = document.createElement("button");
-        button2.innerText = "Show/Hide Left";
-        button2.addEventListener("click", (e) => this.openLeft());
+        button2.classList.add("dov1");
+        button2.innerText = "Layout 2";
+        button2.addEventListener("click", (e) => this.setLayout('v1'));
         bottom.appendChild(button2);
-        //this.ui['button5'] = button5;
+        //this.ui['button2'] = button2;
+        
+        var button3 = document.createElement("button");
+        button3.classList.add("dov1");
+        button3.innerText = "Layout 3";
+        button3.addEventListener("click", (e) => this.setLayout('v2'));
+        bottom.appendChild(button3);
+        //this.ui['button3'] = button3;
+        
+        var button4 = document.createElement("button");
+        button4.classList.add("dov1");
+        button4.innerText = "Layout 4";
+        button4.addEventListener("click", (e) => this.setLayout('v3'));
+        bottom.appendChild(button4);
+        //this.ui['button4'] = button4;
         
         var button5 = document.createElement("button");
         button5.classList.add("dov1");
@@ -221,20 +215,6 @@
         var form = document.createElement("div");
         left.appendChild(form); 
         
-        var defaultManifest = "https://data.artmuseum.princeton.edu/iiif/objects/2687";
-        
-        this.ui.manifest = this.domElement('input',"b1",{"type":"text","value": defaultManifest}, this.ui.leftContent);
-        this.ui.go = this.domElement('button',"b1",{"type":"submit"}, this.ui.leftContent, "Go");
-        this.ui.go.onclick = () => { 
-          var manifest = this.ui.manifest.value;
-          this.load(manifest);
-         }
-        
-        this.ui.toggleButtonLeft = this.domElement('button',"tbl",{"href":"#"}, this.ui.leftHandle, "≡");
-        this.ui.toggleButtonLeft.onclick = () => { this.toggleLeft(); }
-        this.ui.toggleButtonRight = this.domElement('button',"tbr",{"href":"#"}, this.ui.rightHandle, "≡");
-        this.ui.toggleButtonRight.onclick = () => { this.toggleRight(); }
-        /*
         this.ui.manifest = document.createElement("input");
         this.ui.manifest.type = "text";
         this.ui.manifest.value = "https://data.artmuseum.princeton.edu/iiif/objects/2687";
@@ -244,30 +224,23 @@
         this.ui.button.onclick = () => { this.load(this.ui.manifest.value); }
         form.appendChild(this.ui.manifest);
         form.appendChild(this.ui.button);
-*/
+
         this.ui.gallery = document.createElement("div");
         this.ui.gallery.id = "gallery";
         this.ui.gallery.style.height = "90vh";
         this.ui.gallery.style['overflow-x'] = "scroll";
-        this.ui.leftContent.appendChild(this.ui.gallery); 
-        
-        
+        left.appendChild(this.ui.gallery); 
 
       }
       
-      
-      openLeft() { this.ui.left.classList.add('shown'); }
-      closeLeft() { this.ui.left.classList.remove('shown'); }
-      toggleLeft() {
-        if(this.ui.left.classList.contains('shown')) { this.closeLeft(); }
-        else { this.openLeft(); }
+      getLayout() {
+        return this.ui.main.className;
       }
       
-      openRight() { this.ui.right.classList.add('shown'); }
-      closeRight() { this.ui.right.classList.remove('shown'); }
-      toggleRight() {
-        if(this.ui.right.classList.contains('shown')) { this.closeRight(); }
-        else { this.openRight(); }
+      setLayout(layout) {
+        //this.ui.main.classList.add('');
+        this.ui.main.className = layout;
+        //this.ui.main.classList.add(layout);
       }
       
       openStrip() {
@@ -300,10 +273,9 @@
 	   this.load(url);
 	}
       
-      console.log(this.ui);
       
 	this.viewer = OpenSeadragon({
-	  id: this.ui.viewerContainer.id,
+	  id: "middle",
 	  prefixUrl: "assets/js/openseadragon/images/",
 	  tileSources: [],
 	  showFullPageControl: false,
@@ -365,6 +337,7 @@
 		btn.imgHover.src = 'assets/images/crop.svg';
                 this.viewer.setMouseNavEnabled(true);
                 this.viewer.removeOverlay("overlay");
+                this.setLayout(null,'v');
 	    }
 
 	    // Force OpenSeadragon to update the DOM visibility based on current mouse state
@@ -407,7 +380,7 @@
 		    parseSingleImage(url);
 	    } else {
 	    
-	              
+	    
             fetch(url).then(response => response.json())
             .then(data => {
             
@@ -423,7 +396,8 @@
 
 			 break;
 			 case "manifest":
-			     this.manifests.unshift(manifest);
+			     this.manifests[url] = manifest;
+			     //this.addToGallery(manifest);
 			 break;	         
 		}
 		
@@ -462,8 +436,6 @@
 
        drawGallery() {
        
-
-       
          this.ui.gallery.innerHTML = "";
        
          for(var i in this.manifests) {
@@ -473,8 +445,6 @@
            
            var item = document.createElement("div");
            this.ui.gallery.appendChild(item);
-           
-           // BEN
 
            var head = document.createElement("h2");
            head.innerText = label
@@ -521,7 +491,6 @@
          this.current = this.items[canvas];
          this.viewer.removeOverlay("overlay");
          this.isCropActive = false;
-         this.closeLeft();
          this.viewer.open(this.current.service);
          this.showCropButton();
        }
@@ -586,6 +555,7 @@
          }
          this.isCropActive = false;
          this.viewer.open(tilesource);
+         this.setLayout('v2');
          this.closeStrip();
          this.hideCropButton();
        }
@@ -665,6 +635,8 @@
 	    
 	    
 	    handleRelease(event) {
+	            if(this.getLayout() == 'v') { this.setLayout(null,'v2'); }
+	            else { this.setLayout(null,'v3'); }
 	            //var preview = `${this.current.service}/${this.current.region}/300,/0/default.jpg`;
 	            //var myimg = this.domElement("img","pr",{"src": preview}, this.ui.annopreview);
 
@@ -672,8 +644,6 @@
 	            
 	            this.addTile();
 	            this.toggleCrop();
-	            //this.openRight();
-	            this.this.toggleStrip();
 		    
 	    }
 	    
