@@ -25,6 +25,9 @@
 	}
 	#leftContent { background: #cab; }
 	
+	#addmanifest {margin:1em; }
+	#gallery {margin:1em; }
+	#gallery h2 { font-size:1em; }
 	#right {
           position:absolute;
           width:370px;
@@ -61,8 +64,11 @@
         
         #viewer { width:100%;height:100%;margin:0 20px; }
         
-        .card { width:110px;height:110px;display:inline-block;text-align: center; }
-        .card img { max-width:90%; max-height:90%; }
+        .card { width:110px;height:110px;display:flex;text-align: center;background: #EEE;
+  border-radius: 8px;
+  flex-direction: column;
+  justify-content: center; }
+        .card img { max-width:90%; max-height:90%;margin: 0 auto; }
         
         #overlay { border:solid 4px orange; }
         .highlight { border:solid 4px orange; }
@@ -223,8 +229,10 @@
         
         var defaultManifest = "https://data.artmuseum.princeton.edu/iiif/objects/2687";
         
-        this.ui.manifest = this.domElement('input',"b1",{"type":"text","value": defaultManifest}, this.ui.leftContent);
-        this.ui.go = this.domElement('button',"b1",{"type":"submit"}, this.ui.leftContent, "Go");
+        var addmanifest = this.domElement('div',"addmanifest",{}, this.ui.leftContent);
+        
+        this.ui.manifest = this.domElement('input',"manifest",{"type":"text","value": defaultManifest}, addmanifest);
+        this.ui.go = this.domElement('button',"manifestsubmit",{"type":"submit"}, addmanifest, "Go");
         this.ui.go.onclick = () => { 
           var manifest = this.ui.manifest.value;
           this.load(manifest);
