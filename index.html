@@ -571,7 +571,7 @@
        addTile() {
          var thumbnail = `${this.current.service}/${this.current.region}/330,/0/default.jpg`;
          var canvas = this.current.canvas;
-         var card = this.makeCard("hgfyehr64hr", canvas, thumbnail, "EAT ME");
+         var card = this.makeCard("hgfyehr64hr", canvas, thumbnail, "My Caption");
          this.ui.slider.prepend(card);
          card.addEventListener("click", (e) => {
             var canvas = e.currentTarget.getAttribute('rel');
@@ -587,10 +587,10 @@
          card.setAttribute("rel", canvas); 
          card.setAttribute("href","#");    
          var img = document.createElement("img");
-         img.title = "EAT ME";
+         img.title = "My Caption";
          img.setAttribute('src', thumbnail);
          var cap = document.createElement("p");
-         cap.innerText = "EAT ME";
+         cap.innerText = "My Caption";
          card.appendChild(img);
          card.appendChild(cap);
          return card;
