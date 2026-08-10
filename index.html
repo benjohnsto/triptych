@@ -15,7 +15,7 @@
           top:0px;
           bottom:0px;
           left:-344px;
-          z-index:999;
+          z-index:777;
           transition: left 1s;
           display:flex;
 	}
@@ -34,7 +34,7 @@
           top:0px;
           bottom:0px;
           right:-344px;
-          z-index:999;
+          z-index:888;
           transition: right 1s;
           display:flex;
 	}
@@ -54,24 +54,30 @@
 	
         #bottom { 
           position: absolute;
+          display:relative
           height: 180px;
-          background: #acb;
-          bottom:-150px;
+          background: rgba(0,0,0,0.7);
+          bottom:-136px;
           left:0;
           right:0;
           z-index:999;
           transition: bottom 1s;
+          padding-top:14px;
+          height:180px;
         }
         #bottom.shown {
-          bottom: 0;
+          bottom: 0px;
           transition: bottom 1s;
         }
+        #slider { padding:1em;display: flex;flex-wrap: nowrap;gap:1em; }
+        
+        #handle { color:white; background:transparent; padding:0px 8px;position:absolute;right:0;top:0;font-size:1.6em;text-decoration:none; }
         
         #viewer { width:100%;height:100%;background:black; }
         
         .card { 
-          width:110px;
-          height:110px;
+          width: 150px;
+          height: 150px;
           display:flex;
           text-align:center;
           background:#EEE;
@@ -80,7 +86,7 @@
           justify-content: center;
         }
         .card img { max-width:90%; max-height:90%;margin: 0 auto; }
-        
+        .cardgrp { margin-top: 1em; }
         #overlay { border:solid 4px orange; }
         .highlight { border:solid 4px orange; }
         
@@ -150,12 +156,18 @@
         var container = document.getElementById(this.divId);
         if(!container.style.width) { container.style.width = "100%"; }
         if(!container.style.height) { container.style.height = "100vh"; }
+        
         container.style.position = "relative";
+        container.style.overflow = "hidden";
         this.ui.viewerContainer = document.createElement("div");
         this.ui.viewerContainer.id = "viewer";
         container.appendChild(this.ui.viewerContainer);
         
         this.ui.bottom = this.domElement('div',"bottom", {}, container);
+        this.ui.bottomHandle = this.domElement('a',"handle", {"href":"#"}, this.ui.bottom, "🞃");
+        this.ui.bottomHandle.onclick = () => { this.toggleStrip(); }
+
+        
         this.ui.left =   this.domElement('div',"left", {}, container);
         this.ui.leftContent = this.domElement('div',"leftContent", {}, this.ui.left);
         this.ui.leftHandle = this.domElement('div',"leftHandle", {}, this.ui.left);
@@ -200,42 +212,7 @@
  
         //top.appendChild(right);
         
-        var b1    = this.domElement('button',"b1",{"value":"OpenLeft"}, this.ui.bottom);
-        
-        
-        // temporary
-        var button1 = document.createElement("button");
-        button1.innerText = "Show/Hide Right";
-        button1.addEventListener("click", (e) => this.openRight());
-        bottom.appendChild(button1);
-        //this.ui['button5'] = button5;
-        
-        var button2 = document.createElement("button");
-        button2.innerText = "Show/Hide Left";
-        button2.addEventListener("click", (e) => this.openLeft());
-        bottom.appendChild(button2);
-        //this.ui['button5'] = button5;
-        
-        var button5 = document.createElement("button");
-        button5.classList.add("dov1");
-        button5.innerText = "Show/Hide Strip";
-        button5.addEventListener("click", (e) => this.toggleStrip());
-        bottom.appendChild(button5);
-        //this.ui['button5'] = button5;
-        
-        var button6 = document.createElement("button");
-        button6.classList.add("dov1");
-        button6.innerText = "Open Modal";
-        button6.addEventListener("click", (e) => this.openModal());
-        bottom.appendChild(button6);
-        //this.ui['button5'] = button5;
-        
-        var button7 = document.createElement("button");
-        button7.classList.add("dov1");
-        button7.innerText = "Close Modal";
-        button7.addEventListener("click", (e) => this.closeModal());
-        bottom.appendChild(button7);
-        //this.ui['button5'] = button5;
+
         
         var form = document.createElement("div");
         left.appendChild(form); 
@@ -488,18 +465,38 @@
          this.ui.gallery.innerHTML = "";
        
          for(var i in this.manifests) {
-           var m = this.manifests[i]
+           var m = this.manifests[i];
            var label = m.getLabel().getValue();
            var items = m.getSequences()[0].getCanvases();
+           var metadata = m.getMetadata();
+           var metadataHtml = "";
+           for( var i in metadata) {
+             metadataHtml += `<strong>${metadata[i].getLabel()}</strong>  ${metadata[i].getValue()}<br />`;
+             //console.log(metadata[i].getLabel());
+             //console.log(metadata[i].getValue());
+           }
            
            var item = document.createElement("div");
            this.ui.gallery.appendChild(item);
            
            // BEN
 
-           var head = document.createElement("h2");
-           head.innerText = label
-           item.appendChild(head); 
+           //var head = document.createElement("h2");
+           //head.innerText = label
+           //item.appendChild(head); 
+           var details = document.createElement("details");
+           var summary = document.createElement("summary");
+           var detailcontent = document.createElement("p");
+           
+           summary.innerText = label  
+           detailcontent.innerHTML = metadataHtml; 
+           
+           details.appendChild(summary);
+           details.appendChild(detailcontent);
+           item.appendChild(details);  
+           
+           
+           
            var cardgrp = document.createElement("div");
            cardgrp.classList.add('cardgrp');
            item.appendChild(cardgrp);
@@ -589,10 +586,7 @@
          var img = document.createElement("img");
          img.title = "My Caption";
          img.setAttribute('src', thumbnail);
-         var cap = document.createElement("p");
-         cap.innerText = "My Caption";
          card.appendChild(img);
-         card.appendChild(cap);
          return card;
          
        }
