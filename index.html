@@ -568,11 +568,13 @@
        addTile() {
          var thumbnail = `${this.current.service}/${this.current.region}/330,/0/default.jpg`;
          var canvas = this.current.canvas;
-         var card = this.makeCard("hgfyehr64hr", canvas, thumbnail, "My Caption");
+         console.log(this.current);
+         var card = this.makeCard("hgfyehr64hr", canvas, thumbnail, this.current.label);
+         card.setAttribute("data-img", thumbnail);
          this.ui.slider.prepend(card);
          card.addEventListener("click", (e) => {
-            var canvas = e.currentTarget.getAttribute('rel');
-            this.selectSliderItem(canvas);
+            var img = e.currentTarget.getAttribute('data-img');
+            this.selectSliderItem(img);
          });      
          this.openStrip();
        }
@@ -581,27 +583,31 @@
        makeCard(id, canvas, thumbnail, caption) {
          var card = document.createElement("a");
          card.classList.add('card');
-         card.setAttribute("rel", canvas); 
+         card.setAttribute("rel", canvas);
          card.setAttribute("href","#");    
          var img = document.createElement("img");
-         img.title = "My Caption";
+         img.title = caption;
          img.setAttribute('src', thumbnail);
          card.appendChild(img);
          return card;
          
        }
        
-       selectSliderItem(canvas) {
+       
+       
+       selectSliderItem(image) {
          this.viewer.open("");
-         var d = this.items[canvas];
+         //var d = this.items[canvas];
          this.viewer.removeOverlay("overlay");
          var tilesource = {
             type: 'image',
-            url:  `${d.service}/${d.region}/1200,/0/default.jpg`
+            //url:  `${d.service}/${d.region}/1200,/0/default.jpg`
+            url: image
          }
          this.isCropActive = false;
          this.viewer.open(tilesource);
-         this.closeStrip();
+         this.openStrip();
+         //this.closeStrip();
          this.hideCropButton();
        }
        
@@ -687,8 +693,8 @@
 	            
 	            this.addTile();
 	            this.toggleCrop();
-	            //this.openRight();
-	            this.this.toggleStrip();
+	            this.openRight();
+	            this.toggleStrip();
 		    
 	    }
 	    
