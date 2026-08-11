@@ -84,10 +84,8 @@
           border-radius: 8px;
           flex-direction: column;
           justify-content: center;
-          border:solid 4px #EEE;
         }
         .card img { max-width:90%; max-height:90%;margin: 0 auto; }
-        .card.active { border:solid 4px red; }        
         .cardgrp { margin-top: 1em; }
         #overlay { border:solid 4px orange; }
         .highlight { border:solid 4px orange; }
@@ -128,11 +126,6 @@
 	}
 	#tbl { border-radius: 0 2em 2em 0; }
         #tbr { border-radius: 2em 0 0 2em; }
-        
-        #viewer .openseadragon-container > div:nth-child(2) {
-          left: 50% !important;
-          transform: translateX(-50%);
-        }
     
     </style>
   </head>
@@ -169,7 +162,7 @@
         this.ui.viewerContainer = document.createElement("div");
         this.ui.viewerContainer.id = "viewer";
         container.appendChild(this.ui.viewerContainer);
-
+        
         this.ui.bottom = this.domElement('div',"bottom", {}, container);
         this.ui.bottomHandle = this.domElement('a',"handle", {"href":"#"}, this.ui.bottom, "🞃");
         this.ui.bottomHandle.onclick = () => { this.toggleStrip(); }
@@ -260,32 +253,16 @@
 
       }
       
-      /**
-      * Open the left-hand panel
-      */
+      
       openLeft() { this.ui.left.classList.add('shown'); }
-      /**
-      * Close the left-hand panel
-      */
       closeLeft() { this.ui.left.classList.remove('shown'); }
-      /**
-      * Toggle the left-hand panel
-      */
       toggleLeft() {
         if(this.ui.left.classList.contains('shown')) { this.closeLeft(); }
         else { this.openLeft(); }
       }
-      /**
-      * Open the right-hand panel
-      */
+      
       openRight() { this.ui.right.classList.add('shown'); }
-      /**
-      * Close the right-hand panel
-      */
       closeRight() { this.ui.right.classList.remove('shown'); }
-      /**
-      * Toggle the right-hand panel
-      */
       toggleRight() {
         if(this.ui.right.classList.contains('shown')) { this.closeRight(); }
         else { this.openRight(); }
@@ -320,13 +297,16 @@
 	   this.ui.manifest.value = url;
 	   this.load(url);
 	}
-
+      
+      console.log(this.ui);
+      
 	this.viewer = OpenSeadragon({
 	  id: this.ui.viewerContainer.id,
 	  prefixUrl: "assets/js/openseadragon/images/",
 	  tileSources: [],
 	  showFullPageControl: false,
-	  showRotationControl: true
+	  showRotationControl: true,
+	  minZoomLevel: 0.1
 	});
 	
         this.viewer.tracker = new OpenSeadragon.MouseTracker({
@@ -346,7 +326,6 @@
                 onClick: () => this.toggleCrop()
         });
         this.ui.cropButton.element.id = 'cropbutton';
-        
         this.viewer.addControl(this.ui.cropButton.element, {
             anchor: OpenSeadragon.ControlAnchor.TOP_LEFT
         });
@@ -404,7 +383,7 @@
 	*************************************/
 	async load(url) {
 	
-	    url = this.normalizeUrl(url);
+	    const url = this.normalizeUrl(rawUrl);
 	
             if (this.isLoaded(url)) { return false; }
             
@@ -412,6 +391,29 @@
                parseSingleImage(url);
                return;
             }
+
+	    // UCLA has an 'ark:' in their urls that need to be encoded
+	    url = url.replace(/ark:\/(.*?)\/full/, function(r, a) {
+	        var parts = a.split('/');
+	        return "ark%3A%2F" + parts.join('%2F')+"/full";
+	    });
+	    url = url.replace(/ark:\/(.*?)\/manifest/, function(r, a) {
+	        var parts = a.split('/');
+	        return "ark%3A%2F" + parts.join('%2F')+"/manifest";
+	    });
+
+	    // if this is an Internet Archive URL
+	    // convert it to a manifest
+	    /*
+	    if (url.indexOf("archive.org") > 0 && url.indexOf("details") > 0) {
+	        url = internetArchive2Manifest(url);
+	    }
+            */
+
+	    // if this is a IIIF image url, parse it
+	    if (url.search(/\/([0-9]{1,3})\/(color|gray|bitonal|default)\.(png|jpg)/) > 0) {
+		    parseSingleImage(url);
+	    } else {
 	    
 	    
 	    try {
@@ -436,6 +438,9 @@
 	    } catch (error) {
 		console.error('Failed to load manifest:', error);
 	    }
+	    
+
+	    } // end else
 
 	}
 	
@@ -542,7 +547,6 @@
               cardgrp.appendChild(card); 
               card.addEventListener("click", (e) => {
                  var canvas = e.currentTarget.getAttribute('rel');
-                 this.makeCardActive(e.currentTarget);
                  this.selectGalleryItem(canvas);
               });
               
@@ -551,10 +555,7 @@
               img.setAttribute('src',items[k].getCanonicalImageUri(200)); 
               card.appendChild(img);
               
-              if(!this.loaded) { 
-                this.loaded = true;
-                //this.selectGalleryItem(o.canvas);
-              }
+              if(!this.loaded) { this.loaded = true; this.selectGalleryItem(o.canvas); }
 	      
            }
 
@@ -564,7 +565,6 @@
 
 
        selectGalleryItem(canvas) {
-       
          this.current = this.items[canvas];
          this.viewer.removeOverlay("overlay");
          this.isCropActive = false;
@@ -602,7 +602,6 @@
          card.setAttribute("data-img", thumbnail);
          this.ui.slider.prepend(card);
          card.addEventListener("click", (e) => {
-            this.makeCardActive(e.currentTarget);
             var img = e.currentTarget.getAttribute('data-img');
             this.selectSliderItem(img);
          });      
@@ -623,13 +622,6 @@
          
        }
        
-       makeCardActive(card) {
-         var cards = document.querySelectorAll(".card");
-         for (var i = 0; i < cards.length; i++) {
-            cards[i].classList.remove('active');
-         }
-         card.classList.add('active');
-       }
        
        
        selectSliderItem(image) {

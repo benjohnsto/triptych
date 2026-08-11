@@ -1,0 +1,36 @@
+        var b1    = this.domElement('button',"b1",{"value":"OpenLeft"}, this.ui.bottom);
+        
+        
+        // temporary
+        var button1 = document.createElement("button");
+        button1.innerText = "Show/Hide Right";
+        button1.addEventListener("click", (e) => this.openRight());
+        bottom.appendChild(button1);
+        //this.ui['button5'] = button5;
+        
+        var button2 = document.createElement("button");
+        button2.innerText = "Show/Hide Left";
+        button2.addEventListener("click", (e) => this.openLeft());
+        bottom.appendChild(button2);
+        //this.ui['button5'] = button5;
+        
+        var button5 = document.createElement("button");
+        button5.classList.add("dov1");
+        button5.innerText = "Show/Hide Strip";
+        button5.addEventListener("click", (e) => this.toggleStrip());
+        bottom.appendChild(button5);
+        //this.ui['button5'] = button5;
+        
+        var button6 = document.createElement("button");
+        button6.classList.add("dov1");
+        button6.innerText = "Open Modal";
+        button6.addEventListener("click", (e) => this.openModal());
+        bottom.appendChild(button6);
+        //this.ui['button5'] = button5;
+        
+        var button7 = document.createElement("button");
+        button7.classList.add("dov1");
+        button7.innerText = "Close Modal";
+        button7.addEventListener("click", (e) => this.closeModal());
+        bottom.appendChild(button7);
+        //this.ui['button5'] = button5;
