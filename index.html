@@ -138,6 +138,12 @@
         
         .blue-background-class { width: 120px; height: 120px; background: #FFF; }
     
+        #tab_bar { padding:1em; }
+        #tab_bar button { background: #c5c1b7;border: none; padding: 1em; margin-right: 6px;}
+        #tab_bar button.active { background: #000; color:white;}
+        .tab { padding:1em;display:none; }
+        .tab.active { display:block; }
+        
     </style>
   </head>
   <body>
@@ -183,8 +189,22 @@
         this.ui.leftContent = this.domElement('div',"leftContent", {}, this.ui.left);
         this.ui.leftHandle = this.domElement('div',"leftHandle", {}, this.ui.left);
         this.ui.right = this.domElement('div',"right", {}, container);
-        this.ui.rightHandle = this.domElement('div',"rightHandle", {}, this.ui.right); 
+        this.ui.rightHandle = this.domElement('div',"rightHandle", {}, this.ui.right);
+        console.log(this.ui.rightHandle);
         this.ui.rightContent = this.domElement('div',"rightContent", {}, this.ui.right);
+        
+        var tabbar = this.domElement('div',"tab_bar", {}, this.ui.rightContent);
+        var tb1 = this.domElement('button',"tab_button_1", {}, tabbar, "London").classList.add('tab_button', 'active');
+        console.log(tb1);
+        //tab_button_1.onclick = () => { this.toggleStrip(); }
+        var tab_button_2 = this.domElement('button',"tab_button_2", {}, tabbar, "Paris").classList.add('tab_button');
+        var tab_button_3 = this.domElement('button',"tab_button_3", {}, tabbar, "Budapest").classList.add('tab_button');
+        
+        
+        var tab_1 = this.domElement('div',"tab_1", {}, this.ui.rightContent, "London").classList.add('tab','active');
+        //tab_1.classList.add('active');
+        var tab_2 = this.domElement('div',"tab_2", {}, this.ui.rightContent, "Paris").classList.add('tab');
+        var tab_3 = this.domElement('div',"tab_3", {}, this.ui.rightContent, "Budapest").classList.add('tab');
 
         this.ui.slider = this.domElement('div',"slider", {}, bottom);
         
@@ -209,7 +229,7 @@
         this.ui.close.addEventListener("click", (e) => this.closeModal());
         toolbar.appendChild(this.ui.close);
         */       
-
+/*
         var annoform          = this.domElement('div',"myannoform", {}, rightContent);
         this.ui.annoregion    = this.domElement('input',"annoregion", {"type":"text"}, annoform);
         this.ui.annopreview   = this.domElement('div', "annopreview",{}, annoform);
@@ -219,7 +239,7 @@
         annobuttons.style['justify-content'] = "right";
         this.ui.annocancel    = this.domElement('input',"cancel",{"type":"button","value":"Cancel"}, annobuttons);
         this.ui.annosubmit    = this.domElement('input',"submit",{"type":"submit","value":"Create"}, annobuttons);
-
+*/
  
         //top.appendChild(right);
         
@@ -657,7 +677,9 @@
          this.hideCropButton();
        }
        
-       
+       selectTab() {
+         alert('selected');
+       }
        
 	    /*************************
 	    * handle mouse actions on viewer canvas
@@ -739,8 +761,7 @@
 	            
 	            this.addTile();
 	            this.toggleCrop();
-	            this.openRight();
-	            this.toggleStrip();
+	            this.openStrip();
 		    
 	    }
 	    
