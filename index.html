@@ -190,22 +190,31 @@
         this.ui.leftHandle = this.domElement('div',"leftHandle", {}, this.ui.left);
         this.ui.right = this.domElement('div',"right", {}, container);
         this.ui.rightHandle = this.domElement('div',"rightHandle", {}, this.ui.right);
-        console.log(this.ui.rightHandle);
         this.ui.rightContent = this.domElement('div',"rightContent", {}, this.ui.right);
         
         var tabbar = this.domElement('div',"tab_bar", {}, this.ui.rightContent);
-        var tb1 = this.domElement('button',"tab_button_1", {}, tabbar, "London").classList.add('tab_button', 'active');
-        console.log(tb1);
-        //tab_button_1.onclick = () => { this.toggleStrip(); }
-        var tab_button_2 = this.domElement('button',"tab_button_2", {}, tabbar, "Paris").classList.add('tab_button');
-        var tab_button_3 = this.domElement('button',"tab_button_3", {}, tabbar, "Budapest").classList.add('tab_button');
         
-        
-        var tab_1 = this.domElement('div',"tab_1", {}, this.ui.rightContent, "London").classList.add('tab','active');
-        //tab_1.classList.add('active');
-        var tab_2 = this.domElement('div',"tab_2", {}, this.ui.rightContent, "Paris").classList.add('tab');
-        var tab_3 = this.domElement('div',"tab_3", {}, this.ui.rightContent, "Budapest").classList.add('tab');
+        this.ui.tab_1_button = this.domElement('button',"tab_button_1", {}, tabbar, "Metadata");
+        this.ui.tab_1_button.classList.add('tab_button', 'active');
+        this.ui.tab_1_button.onclick = () => { this.selectTab('tab_1'); }
+        this.ui.tab_2_button = this.domElement('button',"tab_button_2", {}, tabbar, "Annotations");
+        this.ui.tab_2_button.classList.add('tab_button');
+        this.ui.tab_2_button.onclick = () => { this.selectTab('tab_2'); }
+        this.ui.tab_3_button = this.domElement('button',"tab_button_3", {}, tabbar, "Edit");
+        this.ui.tab_3_button.classList.add('tab_button');
+        this.ui.tab_3_button.onclick = () => { this.selectTab('tab_3'); }  
+             
+        this.ui.tab_1 = this.domElement('div',"tab_1", {}, this.ui.rightContent, "Metadata");
+        this.ui.tab_1.classList.add('tab','active');
+        this.ui.tab_2 = this.domElement('div',"tab_2", {}, this.ui.rightContent, "Annotations");
+        this.ui.tab_2.classList.add('tab');
+        this.ui.tab_3 = this.domElement('div',"tab_3", {}, this.ui.rightContent, "Edit")
+        this.ui.tab_3.classList.add('tab');
 
+        
+        
+        
+        
         this.ui.slider = this.domElement('div',"slider", {}, bottom);
         
         this.ui.modal = this.domElement('div',"modal", {}, container);
@@ -677,8 +686,18 @@
          this.hideCropButton();
        }
        
-       selectTab() {
-         alert('selected');
+       selectTab(id) {
+         var tabbuttons = document.getElementsByClassName("tab_button");
+         for (let i = 0; i < tabbuttons.length; i++) {
+           tabbuttons[i].classList.remove('active');
+         }
+         var tabs = document.getElementsByClassName("tab");
+         for (let i = 0; i < tabs.length; i++) {
+           tabs[i].classList.remove('active');
+         }
+         this.ui[`${id}_button`].classList.add('active');
+         this.ui[id].classList.add('active');
+
        }
        
 	    /*************************
