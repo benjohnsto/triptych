@@ -144,6 +144,8 @@
         .tab { padding:1em;display:none; }
         .tab.active { display:block; }
         
+        .lowlight { border:solid 5px red; }
+        
     </style>
   </head>
   <body>
@@ -160,7 +162,9 @@
         this.ui = {}
         this.buildUI();
         this.viewer = {};
-        this.manifests = [];
+        //this.manifests = [];
+        this.manifests2 = {};
+        this.annotations = {};
         this.items = {};
         this.current = {};
         this.isCropActive = false;
@@ -192,8 +196,8 @@
         this.ui.rightHandle = this.domElement('div',"rightHandle", {}, this.ui.right);
         this.ui.rightContent = this.domElement('div',"rightContent", {}, this.ui.right);
         
-        var tabbar = this.domElement('div',"tab_bar", {}, this.ui.rightContent);
         
+        var tabbar = this.domElement('div',"tab_bar", {}, this.ui.rightContent);
         this.ui.tab_1_button = this.domElement('button',"tab_button_1", {}, tabbar, "Metadata");
         this.ui.tab_1_button.classList.add('tab_button', 'active');
         this.ui.tab_1_button.onclick = () => { this.selectTab('tab_1'); }
@@ -466,7 +470,8 @@
 
 			 break;
 			 case "manifest":
-			     this.manifests.unshift(manifest);
+			     //this.manifests.unshift(manifest);
+			     this.manifests2[manifest.id] = manifest;
 			 break;	         
 		}
 		
@@ -502,7 +507,8 @@
 	 * Checks if a manifest with the given ID/URL is already loaded
 	 */
         isLoaded(url) {
-          return this.manifests.some(m => m.id === url);
+          return Object.hasOwn(this.manifests2, url);
+          //return this.manifests.some(m => m.id === url);
         }
        
        /*************************
@@ -525,37 +531,30 @@
        drawGallery() {
 
          this.ui.gallery.innerHTML = "";
+         
+         
        
-         for(var i in this.manifests) {
-           var m = this.manifests[i];
+         for(var i in this.manifests2) {
+           var m = this.manifests2[i];
            var label = m.getLabel().getValue();
            var items = m.getSequences()[0].getCanvases();
-           var metadata = m.getMetadata();
-           var metadataHtml = "";
-           for( var i in metadata) {
-             metadataHtml += `<strong>${metadata[i].getLabel()}</strong>  ${metadata[i].getValue()}<br />`;
-             //console.log(metadata[i].getLabel());
-             //console.log(metadata[i].getValue());
-           }
+
            
            var item = document.createElement("div");
            this.ui.gallery.appendChild(item);
+           var head = document.createElement("h2");
+           head.innerText = label
+           item.appendChild(head);
            
-           // BEN
-
-           //var head = document.createElement("h2");
-           //head.innerText = label
-           //item.appendChild(head); 
-           var details = document.createElement("details");
-           var summary = document.createElement("summary");
-           var detailcontent = document.createElement("p");
            
-           summary.innerText = label  
-           detailcontent.innerHTML = metadataHtml; 
-           
-           details.appendChild(summary);
-           details.appendChild(detailcontent);
-           item.appendChild(details);  
+           //var details = document.createElement("details");
+           //var summary = document.createElement("summary");
+           //var detailcontent = document.createElement("p");
+           //summary.innerText = label  
+           //detailcontent.innerHTML = metadataHtml; 
+           //details.appendChild(summary);
+           //details.appendChild(detailcontent);
+           //item.appendChild(details);  
            
            
            
@@ -566,6 +565,7 @@
            for(var k in items) {
               var o = {
                  "canvas":  items[k].id,
+                 "manifest":  m.id,
                  "service": items[k].imageResources[0].getServices()[0].id,
                  "profile": items[k].imageResources[0].getServices()[0].getProfile(),
                  "thumbnail": items[k].getCanonicalImageUri(200),
@@ -599,11 +599,72 @@
            
          }
        }
+       
+       drawOverlays(canvas) {
+         
+         for(var i in this.annotations[canvas]) {
+           this.drawOverlay(this.annotations[canvas][i]);
+         }
+       }
 
+    drawOverlay(anno) {
+        var id = anno.id;
+        var overlayElement = document.createElement("div");
+        overlayElement.setAttribute("href","#");
+        overlayElement.addEventListener('mouseover', (e) => {});
+        overlayElement.addEventListener('mouseleave', (e) => {});
+
+        overlayElement.className = "lowlight";
+        overlayElement.setAttribute('id',`${id}`);
+        
+        const pixelRect = new OpenSeadragon.Rect(anno.region[0],anno.region[1],anno.region[2],anno.region[3]);
+        const viewportRect = this.viewer.viewport.imageToViewportRectangle(pixelRect);
+        this.viewer.addOverlay({
+            element: overlayElement,
+            location: viewportRect
+        });
+        
+
+        /********************************
+        * Click on bounding box
+        *******************************
+	new OpenSeadragon.MouseTracker({
+	   element: overlayElement,
+           clickHandler: (event) => {
+                // Prevent OSD from interpreting this as a canvas click/zoom
+                event.preventDefaultAction = true;
+                const rel = event.originalTarget.getAttribute('rel');
+		//this.main.sidebar.list();
+		console.log(this.annotationPage);
+		this.main.sidebar.showAnnotation(rel);
+	   }
+	});  
+        */
+    }
+    
+    /************************************
+    *
+    ************************************/
+    makeid() {
+	    let result = '';
+	    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+	    const charactersLength = characters.length;
+	    let counter = 0;
+	    while (counter < 24) {
+	        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+	        counter += 1;
+	    }
+	    return result;
+    }
 
        selectGalleryItem(canvas) {
        
+         //this.ui.tab_1.innerHTML = metadataHtml;
          this.current = this.items[canvas];
+         this.setMetadata(this.current.manifest);
+         
+         this.drawOverlays(canvas);
+
          this.viewer.removeOverlay("overlay");
          this.isCropActive = false;
          this.closeLeft();
@@ -635,7 +696,6 @@
        addTile() {
          var thumbnail = `${this.current.service}/${this.current.region}/330,/0/default.jpg`;
          var canvas = this.current.canvas;
-         console.log(this.current);
          var card = this.makeCard("hgfyehr64hr", canvas, thumbnail, this.current.label);
          card.setAttribute("data-img", thumbnail);
          this.ui.slider.prepend(card);
@@ -645,6 +705,13 @@
             this.selectSliderItem(img);
          });      
          this.openStrip();
+       }
+       
+       addAnnotation() {
+         if(this.annotations[this.current.canvas] === undefined) { this.annotations[this.current.canvas] = []; }
+         this.current.id = this.makeid();
+         this.annotations[this.current.canvas].push(this.current);
+         console.log(this.annotations);
        }
        
        
@@ -698,6 +765,15 @@
          this.ui[`${id}_button`].classList.add('active');
          this.ui[id].classList.add('active');
 
+       }
+       
+       setMetadata(manifestid) { 
+           var metadata = this.manifests2[manifestid].getMetadata();
+           var metadataHtml = "";
+           for( var i in metadata) {
+             metadataHtml += `<strong>${metadata[i].getLabel()}</strong>  ${metadata[i].getValue()}<br />`;
+           }
+           this.ui.tab_1.innerHTML = metadataHtml;
        }
        
 	    /*************************
@@ -767,18 +843,15 @@
 
 		    // update the box    
 		    this.viewer.updateOverlay(this.viewer.drag.overlayElement, location);
-		    this.ui.annoregion.value = region;
+		    //this.ui.annoregion.value = region;
 		    this.current.region = region;
 	    }
 	    
 	    
 	    handleRelease(event) {
-	            //var preview = `${this.current.service}/${this.current.region}/300,/0/default.jpg`;
-	            //var myimg = this.domElement("img","pr",{"src": preview}, this.ui.annopreview);
 
-	            //this.ui.annopreview.setAttribute("src",preview);
-	            
 	            this.addTile();
+	            this.addAnnotation();
 	            this.toggleCrop();
 	            this.openStrip();
 		    
@@ -801,6 +874,14 @@
     
     
     var a = new MyApp('myapp');
+    
+    
+    class Tabs {
+      constructor() {
+      
+      }
+    
+    }
     
     </script>
   </body>
