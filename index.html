@@ -27,8 +27,9 @@
 	}
 	#leftContent { background: #e6e2d8;width:338px; }
 	
-	#addmanifest {margin:1em; }
-	#gallery {margin:1em; }
+	#addmanifest { margin:8px; display:flex; }
+	#addmanifest input, #addmanifest button { flex-grow:1;padding:0.7em; }
+	#gallery {margin:8px; }
 	#gallery h2 { font-size:1em; }
 	#right {
           position:absolute;
@@ -78,8 +79,10 @@
         #viewer { width:100%;height:100%;background:black; }
         
         .card { 
-          width: 150px;
+          width: 30%;
+          max-width:150px;
           height: 150px;
+          max-height: 150px;
           display:flex;
           text-align:center;
           background:#EEE;
@@ -90,9 +93,10 @@
         }
         .card img { max-width:90%; max-height:90%;margin: 0 auto; }
         .card.active { border:solid 4px red; }        
-        .cardgrp { margin-top: 1em; }
-        #overlay { border:solid 4px orange; }
-        .highlight { border:solid 4px orange; }
+        .cardgrp { margin-top: 1em;display: flex;flex-wrap: wrap; }
+        #overlay { border:solid 1px white; }
+        .highlight { border:solid 1px white; }
+        .lowlight { border:solid 1px white; }
         
         #myannoform {
           display: flex;
@@ -144,7 +148,7 @@
         .tab { padding:1em;display:none; }
         .tab.active { display:block; }
         
-        .lowlight { border:solid 5px red; }
+
         
     </style>
   </head>
@@ -167,6 +171,7 @@
         this.annotations = {};
         this.items = {};
         this.current = {};
+        this.region = [];
         this.isCropActive = false;
         this.loaded = false;
         this.init();
@@ -215,14 +220,10 @@
         this.ui.tab_3 = this.domElement('div',"tab_3", {}, this.ui.rightContent, "Edit")
         this.ui.tab_3.classList.add('tab');
 
-        
-        
-        
-        
         this.ui.slider = this.domElement('div',"slider", {}, bottom);
         
+        /*  MODAL
         this.ui.modal = this.domElement('div',"modal", {}, container);
-        /*
         var modal = document.createElement("div");
         modal.id = "modal";
         this.ui.modal = modal;
@@ -236,14 +237,13 @@
         toolbar.style.padding = "4px";
         toolbar.style.cursor = "pointer";
         this.ui.modal.appendChild(toolbar);
-        
         this.ui.close = document.createElement("img");
         this.ui.close.src = "assets/images/close.svg";
         this.ui.close.addEventListener("click", (e) => this.closeModal());
         toolbar.appendChild(this.ui.close);
-        */       
-/*
-        var annoform          = this.domElement('div',"myannoform", {}, rightContent);
+        END MODAL   */       
+
+        var annoform          = this.domElement('div',"myannoform", {}, tab_3);
         this.ui.annoregion    = this.domElement('input',"annoregion", {"type":"text"}, annoform);
         this.ui.annopreview   = this.domElement('div', "annopreview",{}, annoform);
         this.ui.annotext      = this.domElement('textarea',"annotext", {}, annoform);
@@ -252,7 +252,7 @@
         annobuttons.style['justify-content'] = "right";
         this.ui.annocancel    = this.domElement('input',"cancel",{"type":"button","value":"Cancel"}, annobuttons);
         this.ui.annosubmit    = this.domElement('input',"submit",{"type":"submit","value":"Create"}, annobuttons);
-*/
+
  
         //top.appendChild(right);
         
@@ -371,6 +371,14 @@
 	  showRotationControl: true
 	});
 	
+	this.viewer.addHandler("open", () => {
+	  //console.log(this.viewer);
+	  //this.manuallyDrawOverlay();
+	  this.drawOverlays(this.current.canvas);
+	});
+	
+	
+	
         this.viewer.tracker = new OpenSeadragon.MouseTracker({
             element: this.viewer.element,
             pressHandler: (event) => {  this.handlePress(event);  },
@@ -419,13 +427,13 @@
 		btn.imgRest.src = 'assets/images/crop-active.svg';
 		btn.imgHover.src = 'assets/images/crop-active-hover.svg'; // Or same image if no hover variant
                 this.viewer.setMouseNavEnabled(false);
-                this.viewer.removeOverlay("overlay");
+                //this.viewer.removeOverlay("overlay");
 	    } else {
 		// Revert to Inactive state
 		btn.imgRest.src = 'assets/images/crop.svg';
 		btn.imgHover.src = 'assets/images/crop.svg';
                 this.viewer.setMouseNavEnabled(true);
-                this.viewer.removeOverlay("overlay");
+                //this.viewer.removeOverlay("overlay");
 	    }
 
 	    // Force OpenSeadragon to update the DOM visibility based on current mouse state
@@ -601,29 +609,48 @@
        }
        
        drawOverlays(canvas) {
-         
-         for(var i in this.annotations[canvas]) {
-           this.drawOverlay(this.annotations[canvas][i]);
+       
+         console.log(this.annotations[canvas]);
+       
+         if(this.annotations[canvas]) {
+           for(var i in this.annotations[canvas]) {
+             this.drawOverlay(this.annotations[canvas][i]);
+           }
          }
        }
-
+       
+    /*   
+    manuallyDrawOverlay() {
+        var id = "hf7f64h4frkif8";
+        var overlayElement = document.createElement("div");
+        overlayElement.className = "lowlight";
+        overlayElement.id = id;
+        overlayElement.style.border = "solid 5px red";
+        const pixelRect = new OpenSeadragon.Rect(10,10,400,400);
+        const viewportRect = this.viewer.viewport.imageToViewportRectangle(pixelRect);
+        this.viewer.addOverlay({
+            element: overlayElement,
+            location: viewportRect
+        });
+        console.log(overlayElement);
+    }       
+    */
     drawOverlay(anno) {
-        var id = anno.id;
+    
+        var id = this.makeid();
         var overlayElement = document.createElement("div");
         overlayElement.setAttribute("href","#");
         overlayElement.addEventListener('mouseover', (e) => {});
         overlayElement.addEventListener('mouseleave', (e) => {});
-
         overlayElement.className = "lowlight";
         overlayElement.setAttribute('id',`${id}`);
-        
         const pixelRect = new OpenSeadragon.Rect(anno.region[0],anno.region[1],anno.region[2],anno.region[3]);
         const viewportRect = this.viewer.viewport.imageToViewportRectangle(pixelRect);
         this.viewer.addOverlay({
             element: overlayElement,
             location: viewportRect
         });
-        
+  
 
         /********************************
         * Click on bounding box
@@ -662,10 +689,7 @@
          //this.ui.tab_1.innerHTML = metadataHtml;
          this.current = this.items[canvas];
          this.setMetadata(this.current.manifest);
-         
-         this.drawOverlays(canvas);
-
-         this.viewer.removeOverlay("overlay");
+         //this.viewer.removeOverlay("overlay");
          this.isCropActive = false;
          this.closeLeft();
          this.viewer.open(this.current.service);
@@ -694,7 +718,7 @@
        * Add a tile to the slider strip
        ******************************/
        addTile() {
-         var thumbnail = `${this.current.service}/${this.current.region}/330,/0/default.jpg`;
+         var thumbnail = `${this.current.service}/${this.region}/330,/0/default.jpg`;
          var canvas = this.current.canvas;
          var card = this.makeCard("hgfyehr64hr", canvas, thumbnail, this.current.label);
          card.setAttribute("data-img", thumbnail);
@@ -708,9 +732,13 @@
        }
        
        addAnnotation() {
-         if(this.annotations[this.current.canvas] === undefined) { this.annotations[this.current.canvas] = []; }
-         this.current.id = this.makeid();
-         this.annotations[this.current.canvas].push(this.current);
+         if(this.annotations[this.current.canvas] === undefined) { 
+            this.annotations[this.current.canvas] = [];
+         }
+         var myanno = structuredClone(this.current);
+         myanno.id = this.makeid();
+         myanno.region = this.region;
+         this.annotations[this.current.canvas].push(myanno);
          console.log(this.annotations);
        }
        
@@ -782,7 +810,7 @@
 	    handlePress(event) {
 
 		//if (this.isCropActive) {  return;  }
-		this.viewer.removeOverlay("overlay");
+		//this.viewer.removeOverlay("overlay");
 		var overlayElement = document.createElement("div");
 		overlayElement.id = "overlay";
 		overlayElement.className = "highlight";
@@ -844,7 +872,8 @@
 		    // update the box    
 		    this.viewer.updateOverlay(this.viewer.drag.overlayElement, location);
 		    //this.ui.annoregion.value = region;
-		    this.current.region = region;
+		    this.region = region;
+		    //this.ui.annoregion.value = region.join(',');
 	    }
 	    
 	    
