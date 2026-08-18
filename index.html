@@ -394,7 +394,17 @@
 	  prefixUrl: "assets/js/openseadragon/images/",
 	  tileSources: [],
 	  showFullPageControl: false,
-	  showRotationControl: true
+	  showRotationControl: true,
+	  // 1. Allow zooming in as far as desired (ignores pixel density limits)
+	  maxZoomPixelRatio: Infinity,
+
+	  // 2. Set explicit numeric zoom boundaries (optional)
+	  minZoomLevel: 0.05, // Allows zooming far out
+	  maxZoomLevel: 50,   // Allows deep zooming into individual pixels
+
+	  // 3. Keep margin/padding settings from earlier
+	  homeFillsViewer: false,
+	  visibilityRatio: 0.8
 	});
 	
 	this.viewer.addHandler("open", () => {
