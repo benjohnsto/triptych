@@ -1,0 +1,122 @@
+       
+       /***********************
+       * Add a tile to the slider strip
+       ******************************/
+       addTile() {
+         var thumbnail = `${this.current.service}/${this.region}/330,/0/default.jpg`;
+         var canvas = this.current.canvas;
+         var card = this.makeCard(this.makeid(), canvas, thumbnail, this.current.label);
+         card.setAttribute("data-img", thumbnail);
+         this.ui.slider.appendChild(card);
+         card.addEventListener("click", (e) => {
+            this.makeCardActive(e.currentTarget);
+            var img = e.currentTarget.getAttribute('data-img');
+            this.selectSliderItem(img);
+         });      
+         this.openStrip();
+       }
+       
+       
+       addAnnotation() {
+         if(this.annotations[this.current.canvas] === undefined) { 
+            this.annotations[this.current.canvas] = [];
+         }
+         var myanno = structuredClone(this.current);
+         myanno.id = this.makeid();
+         myanno.region = this.region;
+         myanno.caption = "";
+         this.annotations[this.current.canvas].push(myanno);
+         this.slides.push(myanno);
+       }       
+       
+       
+       drawSlides() {
+         for(var i in this.slides) {  
+           this.makeSlide(this.slides[i]);
+         }
+       }
+
+       makeSlide(o) {
+         var card = document.createElement("a");
+         card.classList.add('card');
+         card.setAttribute("rel", o.canvas);
+         card.setAttribute("href","#");    
+         var img = document.createElement("img");
+         img.title = o.caption;
+         img.setAttribute('src', o.thumbnail);
+         card.appendChild(img);
+         return card;
+       }    
+       
+       makeCard(id, canvas, thumbnail, caption) {
+         var card = document.createElement("a");
+         card.classList.add('card');
+         card.setAttribute("rel", canvas);
+         card.setAttribute("href","#");    
+         var img = document.createElement("img");
+         img.title = caption;
+         img.setAttribute('src', thumbnail);
+         card.appendChild(img);
+         return card;
+         
+       }
+       
+       makeCardActive(card) {
+         var cards = document.querySelectorAll(".card");
+         for (var i = 0; i < cards.length; i++) {
+            cards[i].classList.remove('active');
+         }
+         card.classList.add('active');
+       }
+       
+       
+       selectSliderItem(image) {
+         this.viewer.open("");
+         //var d = this.items[canvas];
+         this.viewer.removeOverlay("overlay");
+         var tilesource = {
+            type: 'image',
+            //url:  `${d.service}/${d.region}/1200,/0/default.jpg`
+            url: image
+         }
+         this.isCropActive = false;
+         this.viewer.open(tilesource);
+         this.openStrip();
+         //this.closeStrip();
+         this.hideCropButton();
+       }
+
+
+       
+       drawSlides() {
+         for(var i in this.slides) {  
+           this.makeSlide(this.slides[i]);
+         }
+       }
+
+       makeSlide(o) {
+         var card = document.createElement("a");
+         card.classList.add('card');
+         card.setAttribute("rel", o.canvas);
+         card.setAttribute("href","#");    
+         var img = document.createElement("img");
+         img.title = o.caption;
+         img.setAttribute('src', o.thumbnail);
+         card.appendChild(img);
+         return card;
+       }    
+       
+       makeCard(id, canvas, thumbnail, caption) {
+         var card = document.createElement("a");
+         card.classList.add('card');
+         card.setAttribute("rel", canvas);
+         card.setAttribute("href","#");    
+         var img = document.createElement("img");
+         img.title = caption;
+         img.setAttribute('src', thumbnail);
+         card.appendChild(img);
+         return card;
+         
+       }
+       
+

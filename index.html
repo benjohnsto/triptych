@@ -78,6 +78,9 @@
         
         #viewer { width:100%;height:100%;background:black; }
         
+        #prev { position:absolute;top:49%;left:30px; }
+        #next { position:absolute;top:49%;right:30px; }
+        
         .card { 
           width: 30%;
           max-width:150px;
@@ -90,9 +93,26 @@
           flex-direction: column;
           justify-content: center;
           border:solid 4px #EEE;
+          position:relative;
         }
         .card img { max-width:90%; max-height:90%;margin: 0 auto; }
-        .card.active { border:solid 4px red; }        
+        .card.active { border:solid 4px red; } 
+        .counter {
+          position:absolute;
+          top:2px;
+          left:2px;
+          background:black;
+          height:2em;
+          width:2em;
+          border-radius:2em;
+          color:white;
+          text-decoration:none;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+        
+               
         .cardgrp { margin-top: 1em;display: flex;flex-wrap: wrap; }
         #overlay { border:solid 1px white; }
         .highlight { border:solid 1px white; }
@@ -169,6 +189,7 @@
         //this.manifests = [];
         this.manifests2 = {};
         this.annotations = {};
+        this.slides = [];
         this.items = {};
         this.current = {};
         this.region = [];
@@ -188,13 +209,18 @@
         this.ui.viewerContainer = document.createElement("div");
         this.ui.viewerContainer.id = "viewer";
         container.appendChild(this.ui.viewerContainer);
+        
+        this.ui.prev = this.domElement('button',"prev", {}, this.ui.viewerContainer, "PREV");
+        this.ui.next = this.domElement('button',"next", {}, this.ui.viewerContainer, "NEXT");
+
 
         this.ui.bottom = this.domElement('div',"bottom", {}, container);
         this.ui.bottomHandle = this.domElement('a',"handle", {"href":"#"}, this.ui.bottom, "🞃");
         this.ui.bottomHandle.onclick = () => { this.toggleStrip(); }
 
         
-        this.ui.left =   this.domElement('div',"left", {}, container);
+        this.ui.left = this.domElement('div',"left", {}, container);
+        this.ui.left.classList.add('shown');
         this.ui.leftContent = this.domElement('div',"leftContent", {}, this.ui.left);
         this.ui.leftHandle = this.domElement('div',"leftHandle", {}, this.ui.left);
         this.ui.right = this.domElement('div',"right", {}, container);
@@ -372,8 +398,6 @@
 	});
 	
 	this.viewer.addHandler("open", () => {
-	  //console.log(this.viewer);
-	  //this.manuallyDrawOverlay();
 	  this.drawOverlays(this.current.canvas);
 	});
 	
@@ -609,14 +633,13 @@
        }
        
        drawOverlays(canvas) {
-       
-         console.log(this.annotations[canvas]);
-       
-         if(this.annotations[canvas]) {
-           for(var i in this.annotations[canvas]) {
-             this.drawOverlay(this.annotations[canvas][i]);
-           }
-         }
+         
+        const result = this.slides.filter(slide => slide.canvas == canvas);
+        
+        for(var i in result) {
+          this.drawOverlay(result[i]);
+        }
+
        }
        
     /*   
@@ -635,7 +658,7 @@
         console.log(overlayElement);
     }       
     */
-    drawOverlay(anno) {
+    drawOverlay(o) {
     
         var id = this.makeid();
         var overlayElement = document.createElement("div");
@@ -644,7 +667,7 @@
         overlayElement.addEventListener('mouseleave', (e) => {});
         overlayElement.className = "lowlight";
         overlayElement.setAttribute('id',`${id}`);
-        const pixelRect = new OpenSeadragon.Rect(anno.region[0],anno.region[1],anno.region[2],anno.region[3]);
+        const pixelRect = new OpenSeadragon.Rect(o.region[0],o.region[1],o.region[2],o.region[3]);
         const viewportRect = this.viewer.viewport.imageToViewportRectangle(pixelRect);
         this.viewer.addOverlay({
             element: overlayElement,
@@ -691,7 +714,6 @@
          this.setMetadata(this.current.manifest);
          //this.viewer.removeOverlay("overlay");
          this.isCropActive = false;
-         this.closeLeft();
          this.viewer.open(this.current.service);
          this.showCropButton();
        }
@@ -714,47 +736,22 @@
          this.ui.cropButton.element.style.display = "none";
        }
        
-       /***********************
-       * Add a tile to the slider strip
-       ******************************/
-       addTile() {
-         var thumbnail = `${this.current.service}/${this.region}/330,/0/default.jpg`;
-         var canvas = this.current.canvas;
-         var card = this.makeCard("hgfyehr64hr", canvas, thumbnail, this.current.label);
-         card.setAttribute("data-img", thumbnail);
-         this.ui.slider.prepend(card);
-         card.addEventListener("click", (e) => {
-            this.makeCardActive(e.currentTarget);
-            var img = e.currentTarget.getAttribute('data-img');
-            this.selectSliderItem(img);
-         });      
-         this.openStrip();
-       }
-       
-       addAnnotation() {
-         if(this.annotations[this.current.canvas] === undefined) { 
-            this.annotations[this.current.canvas] = [];
-         }
-         var myanno = structuredClone(this.current);
-         myanno.id = this.makeid();
-         myanno.region = this.region;
-         this.annotations[this.current.canvas].push(myanno);
-         console.log(this.annotations);
-       }
        
        
-       makeCard(id, canvas, thumbnail, caption) {
-         var card = document.createElement("a");
-         card.classList.add('card');
-         card.setAttribute("rel", canvas);
-         card.setAttribute("href","#");    
-         var img = document.createElement("img");
-         img.title = caption;
-         img.setAttribute('src', thumbnail);
-         card.appendChild(img);
-         return card;
-         
-       }
+       
+       
+       
+       
+       
+       
+       
+
+       
+       
+
+       
+       
+       
        
        makeCardActive(card) {
          var cards = document.querySelectorAll(".card");
@@ -780,6 +777,56 @@
          //this.closeStrip();
          this.hideCropButton();
        }
+       
+
+
+
+
+       drawSlides() {
+         this.ui.slider.innerHTML = "";
+         for(var i in this.slides) {
+           var slide = this.domElement('a',this.makeid(),{"href":"#", "class": "card"}, this.ui.slider);
+           slide.setAttribute("data-canvas", this.slides[i].canvas);
+           slide.setAttribute("data-img",this.slides[i].thumbnail);
+           this.domElement('span',"",{"class":"counter"}, slide, (parseInt(i)+1));
+           this.domElement('img',"",{"title":this.slides[i].caption,"src":this.slides[i].thumbnail}, slide);
+           slide.addEventListener("click", (e) => {
+              this.makeSlideActive(e.currentTarget);
+              var img = e.currentTarget.getAttribute('data-img');
+              var canvas = e.currentTarget.getAttribute('data-canvas');
+              this.selectSlide(img);
+           });
+         }
+       } 
+       
+       makeSlideActive(card) {
+         var cards = document.querySelectorAll(".card");
+         for (var i = 0; i < cards.length; i++) {
+            cards[i].classList.remove('active');
+         }
+         
+         const corresponding_canvas = document.querySelector(`[rel="${card.getAttribute('data-canvas')}"]`);
+         corresponding_canvas.classList.add('active');
+       }
+       
+       
+
+       selectSlide(image) {
+         //this.viewer.open("");
+         //var d = this.items[canvas];
+         this.viewer.removeOverlay("overlay");
+         var tilesource = {
+            type: 'image',
+            url: image
+         }
+         this.isCropActive = false;
+         this.viewer.open(tilesource);
+         this.openStrip();
+         this.hideCropButton();
+       }
+       
+       
+       
        
        selectTab(id) {
          var tabbuttons = document.getElementsByClassName("tab_button");
@@ -878,12 +925,15 @@
 	    
 	    
 	    handleRelease(event) {
-
-	            this.addTile();
-	            this.addAnnotation();
+	            var slide = structuredClone(this.current);
+	            slide.id = this.makeid();
+	            slide.region = this.region;
+	            slide.thumbnail = `${this.current.service}/${this.region}/330,/0/default.jpg`
+	            slide.caption = "";
+	            this.slides.push(slide);
+	            this.drawSlides();
 	            this.toggleCrop();
 	            this.openStrip();
-		    
 	    }
 	    
 	    
@@ -891,7 +941,8 @@
               var r = document.createElement(element);
               r.id = id;
               for(var i in attr) {
-                r[i] = attr[i];
+                if(i == "class") { r.classList.add(attr[i]); }
+                else { r[i] = attr[i]; }
               }
               if(innerText) { r.innerText = innerText; }
               appendTo.appendChild(r);
