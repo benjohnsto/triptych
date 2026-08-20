@@ -97,10 +97,18 @@
         }
         .card img { max-width:90%; max-height:90%;margin: 0 auto; }
         .card.active { border:solid 4px red; } 
+        
+        .caption-container { display:flex; }
+        .caption {
+          border: solid 1px black;
+          min-height: 2em;
+          border-radius: 10px;
+          margin: 0 1em;
+          padding: 1em;
+          width: 100%; 
+          }
+
         .counter {
-          position:absolute;
-          top:-16px;
-          left:-16px;
           background:black;
           height:2em;
           width:2em;
@@ -170,7 +178,6 @@
         .tab { padding:1em;display:none;flex-direction:column; }
         .tab.active { display:flex; }
         
-        .caption { border:solid 1px black;min-height:2em;border-radius:10px;margin:5px;padding:1em;position:relative;display:inline-block; }
 
         
     </style>
@@ -214,12 +221,14 @@
         
         this.ui.prev = this.domElement('button',"prev", {}, container, "PREV");
         this.ui.next = this.domElement('button',"next", {}, container, "NEXT");
+        
         this.ui.prev.onclick = (e) => {
           var canvas = e.originalTarget.getAttribute('rel');
           this.viewer.open(this.items[canvas].service);
         };
         this.ui.next.onclick = (e) => {
           var canvas = e.originalTarget.getAttribute('rel');
+          console.log(this.items);
           this.viewer.open(this.items[canvas].service);
         };
 
@@ -752,9 +761,10 @@
     }
     
     drawCaption(i, o) {
-    
-           var caption = this.domElement('div',this.makeid(),{"class": "caption", "contenteditable":"true"}, this.ui.tab_2, o.text);
-           this.domElement('span',"",{"class":"counter"}, caption, (parseInt(i)+1));
+           var container = this.domElement('div',"",{"class":"caption-container"}, this.ui.tab_2);
+           this.domElement('span',"",{"class":"counter"}, container, (parseInt(i)+1));
+           var caption = this.domElement('div',this.makeid(),{"class": "caption", "contenteditable":"true"}, container, o.text);
+           
            caption.addEventListener("click", (e) => {
               e.target.setAttribute('contenteditable','true');
            });
@@ -796,6 +806,15 @@
          this.showCropButton();
        }
        
+       /*
+       setStage(tilesource, canvas) {
+          console.log("load image");
+          console.log("set prev and next");
+          console.log("set metadata");
+          console.log("turn off crop");
+          console.log("if this is a manifest, this.showCropButton()");
+       }
+       */
        /***************************
        * 
        ************************************/
@@ -808,11 +827,15 @@
          var prev = keys[index - 1] ? object[keys[index - 1]].canvas : null;
          var next = keys[index + 1] ? object[keys[index + 1]].canvas : null;
          
+         this.ui.next.setAttribute("rel", next);
+         this.ui.prev.setAttribute("rel", prev);
+         /*
          return {
            previous: keys[index - 1] ? object[keys[index - 1]].canvas : null,
            current: object[targetKey].canvas,
            next: keys[index + 1] ? object[keys[index + 1]].canvas : null
          };
+         */
        }
 
 
@@ -914,8 +937,6 @@
        
 
        selectSlide(image) {
-         //this.viewer.open("");
-         //var d = this.items[canvas];
          this.viewer.removeOverlay("overlay");
          var tilesource = {
             type: 'image',
