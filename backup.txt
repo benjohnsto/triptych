@@ -120,3 +120,88 @@
        }
        
 
+
+
+
+
+       
+       
+       
+       
+       
+       
+       
+ORIG
+
+
+       drawGallery() {
+
+         this.ui.gallery.innerHTML = "";
+         
+         
+       
+         for(var i in this.manifests2) {
+           var m = this.manifests2[i];
+           var label = m.getLabel().getValue();
+           var items = m.getSequences()[0].getCanvases();
+
+           
+           var item = document.createElement("div");
+           this.ui.gallery.appendChild(item);
+           var head = document.createElement("h2");
+           head.innerText = label
+           item.appendChild(head);
+           
+           
+           //var details = document.createElement("details");
+           //var summary = document.createElement("summary");
+           //var detailcontent = document.createElement("p");
+           //summary.innerText = label  
+           //detailcontent.innerHTML = metadataHtml; 
+           //details.appendChild(summary);
+           //details.appendChild(detailcontent);
+           //item.appendChild(details);  
+           
+           
+           
+           var cardgrp = document.createElement("div");
+           cardgrp.classList.add('cardgrp');
+           item.appendChild(cardgrp);
+
+           for(var k in items) {
+              var o = {
+                 "canvas":  items[k].id,
+                 "manifest":  m.id,
+                 "service": items[k].imageResources[0].getServices()[0].id,
+                 "profile": items[k].imageResources[0].getServices()[0].getProfile(),
+                 "thumbnail": items[k].getCanonicalImageUri(200),
+                 "label": items[k].getLabel().getValue()
+	      }
+	      this.items[o.canvas] = o;
+	      
+              var card = document.createElement("a");
+              card.classList.add('card');
+              card.setAttribute("rel", o.canvas); 
+              card.setAttribute("href","#");
+              cardgrp.appendChild(card); 
+              card.addEventListener("click", (e) => {
+                 var canvas = e.currentTarget.getAttribute('rel');
+                 this.makeCardActive(e.currentTarget);
+                 this.selectGalleryItem(canvas);
+              });
+              
+              var img = document.createElement("img");
+              img.title = items[k].getLabel().getValue();
+              img.setAttribute('src',items[k].getCanonicalImageUri(200)); 
+              card.appendChild(img);
+              
+              if(!this.loaded) { 
+                this.loaded = true;
+                //this.selectGalleryItem(o.canvas);
+              }
+	      
+           }
+
+           
+         }
+       }

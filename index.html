@@ -29,7 +29,7 @@
 	
 	#addmanifest { margin:8px; display:flex; }
 	#addmanifest input, #addmanifest button { flex-grow:1;padding:0.7em; }
-	#gallery {margin:8px; }
+	#gallery {margin:8px;margin-bottom: 4em; }
 	#gallery h2 { font-size:1em; }
 	#right {
           position:absolute;
@@ -99,21 +99,23 @@
         .card.active { border:solid 4px red; } 
         .counter {
           position:absolute;
-          top:2px;
-          left:2px;
+          top:-16px;
+          left:-16px;
           background:black;
           height:2em;
           width:2em;
           border-radius:2em;
           color:white;
           text-decoration:none;
+          text-align:center;
           display: flex;
           flex-direction: column;
           justify-content: center;
         }
         
                
-        .cardgrp { margin-top: 1em;display: flex;flex-wrap: wrap; }
+        .cardgrp { margin-top: 1em;display: flex;flex-wrap: wrap;overflow:hidden;height:0px;transition:height 1s; }
+        .cardgrp.open { height:auto; transition:height 1s; }
         #overlay { border:solid 1px white; }
         .highlight { border:solid 1px white; }
         .lowlight { border:solid 1px white; }
@@ -165,9 +167,10 @@
         #tab_bar { padding:1em; }
         #tab_bar button { background: #c5c1b7;border: none; padding: 1em; margin-right: 6px;}
         #tab_bar button.active { background: #000; color:white;}
-        .tab { padding:1em;display:none; }
-        .tab.active { display:block; }
+        .tab { padding:1em;display:none;flex-direction:column; }
+        .tab.active { display:flex; }
         
+        .caption { border:solid 1px black;min-height:2em;border-radius:10px;margin:5px;padding:1em;position:relative;display:inline-block; }
 
         
     </style>
@@ -186,9 +189,8 @@
         this.ui = {}
         this.buildUI();
         this.viewer = {};
-        //this.manifests = [];
-        this.manifests2 = {};
-        this.annotations = {};
+        this.manifests = {};
+        //this.annotations = {};
         this.slides = [];
         this.items = {};
         this.current = {};
@@ -210,8 +212,16 @@
         this.ui.viewerContainer.id = "viewer";
         container.appendChild(this.ui.viewerContainer);
         
-        this.ui.prev = this.domElement('button',"prev", {}, this.ui.viewerContainer, "PREV");
-        this.ui.next = this.domElement('button',"next", {}, this.ui.viewerContainer, "NEXT");
+        this.ui.prev = this.domElement('button',"prev", {}, container, "PREV");
+        this.ui.next = this.domElement('button',"next", {}, container, "NEXT");
+        this.ui.prev.onclick = (e) => {
+          var canvas = e.originalTarget.getAttribute('rel');
+          this.viewer.open(this.items[canvas].service);
+        };
+        this.ui.next.onclick = (e) => {
+          var canvas = e.originalTarget.getAttribute('rel');
+          this.viewer.open(this.items[canvas].service);
+        };
 
 
         this.ui.bottom = this.domElement('div',"bottom", {}, container);
@@ -232,19 +242,24 @@
         this.ui.tab_1_button = this.domElement('button',"tab_button_1", {}, tabbar, "Metadata");
         this.ui.tab_1_button.classList.add('tab_button', 'active');
         this.ui.tab_1_button.onclick = () => { this.selectTab('tab_1'); }
-        this.ui.tab_2_button = this.domElement('button',"tab_button_2", {}, tabbar, "Annotations");
+        this.ui.tab_2_button = this.domElement('button',"tab_button_2", {}, tabbar, "Slides");
         this.ui.tab_2_button.classList.add('tab_button');
         this.ui.tab_2_button.onclick = () => { this.selectTab('tab_2'); }
-        this.ui.tab_3_button = this.domElement('button',"tab_button_3", {}, tabbar, "Edit");
+        this.ui.tab_3_button = this.domElement('button',"tab_button_3", {}, tabbar, "Note");
         this.ui.tab_3_button.classList.add('tab_button');
         this.ui.tab_3_button.onclick = () => { this.selectTab('tab_3'); }  
+        this.ui.tab_4_button = this.domElement('button',"tab_button_4", {}, tabbar, "Tags");
+        this.ui.tab_4_button.classList.add('tab_button');
+        this.ui.tab_4_button.onclick = () => { this.selectTab('tab_4'); } 
              
         this.ui.tab_1 = this.domElement('div',"tab_1", {}, this.ui.rightContent, "Metadata");
         this.ui.tab_1.classList.add('tab','active');
-        this.ui.tab_2 = this.domElement('div',"tab_2", {}, this.ui.rightContent, "Annotations");
+        this.ui.tab_2 = this.domElement('div',"tab_2", {}, this.ui.rightContent, "Slides");
         this.ui.tab_2.classList.add('tab');
-        this.ui.tab_3 = this.domElement('div',"tab_3", {}, this.ui.rightContent, "Edit")
+        this.ui.tab_3 = this.domElement('div',"tab_3", {}, this.ui.rightContent, "Note")
         this.ui.tab_3.classList.add('tab');
+        this.ui.tab_4 = this.domElement('div',"tab_4", {}, this.ui.rightContent, "Tags")
+        this.ui.tab_4.classList.add('tab');
 
         this.ui.slider = this.domElement('div',"slider", {}, bottom);
         
@@ -315,8 +330,8 @@
         */
         this.ui.gallery = document.createElement("div");
         this.ui.gallery.id = "gallery";
-        this.ui.gallery.style.height = "90vh";
-        this.ui.gallery.style['overflow-x'] = "scroll";
+        this.ui.gallery.style.height = "84vh";
+        this.ui.gallery.style['overflow-x'] = "auto";
         this.ui.leftContent.appendChild(this.ui.gallery); 
         
         
@@ -404,11 +419,25 @@
 
 	  // 3. Keep margin/padding settings from earlier
 	  homeFillsViewer: false,
-	  visibilityRatio: 0.8
+	  visibilityRatio: 0
 	});
 	
 	this.viewer.addHandler("open", () => {
+
 	  this.drawOverlays(this.current.canvas);
+
+	  
+          var item = this.viewer.world.getItemAt(0);
+          var source = item.source;
+
+          // Check if it's a plain single image
+          if (source instanceof OpenSeadragon.ImageTileSource) {
+              // Apply zoom-out logic only for standard images only
+              // this is to add a black margin around the image in the viewer
+              this.viewer.viewport.zoomTo(0.5, null, true);
+              this.viewer.viewport.ensureVisible();
+          }
+	  
 	});
 	
 	
@@ -513,7 +542,7 @@
 			 break;
 			 case "manifest":
 			     //this.manifests.unshift(manifest);
-			     this.manifests2[manifest.id] = manifest;
+			     this.manifests[manifest.id] = manifest;
 			 break;	         
 		}
 		
@@ -549,7 +578,7 @@
 	 * Checks if a manifest with the given ID/URL is already loaded
 	 */
         isLoaded(url) {
-          return Object.hasOwn(this.manifests2, url);
+          return Object.hasOwn(this.manifests, url);
           //return this.manifests.some(m => m.id === url);
         }
        
@@ -570,23 +599,41 @@
        }
 
 
+
+
+
        drawGallery() {
 
          this.ui.gallery.innerHTML = "";
          
-         
+         var first = true;
        
-         for(var i in this.manifests2) {
-           var m = this.manifests2[i];
+         for(var i in this.manifests) {
+           var m = this.manifests[i];
+           var id = this.makeid();
            var label = m.getLabel().getValue();
            var items = m.getSequences()[0].getCanvases();
 
            
-           var item = document.createElement("div");
-           this.ui.gallery.appendChild(item);
-           var head = document.createElement("h2");
-           head.innerText = label
-           item.appendChild(head);
+           //var item = document.createElement("a");
+           var item =    this.domElement('div', `${id}`, {}, this.ui.gallery);
+           var label =   this.domElement('a',"", {"href":"#","rel":`${id}-gallery`}, item, label);
+           var gallery = this.domElement('div',`${id}-gallery`, {"class":"cardgrp"}, item);
+           
+           label.onclick = (e) => { 
+             //var cards = document.getElementsByClassName("cardgrp");
+             //for(var c = 0; c <= cards.length-1; c++) { console.log(cards[c]);cards[c].classList.remove('open'); }
+             var targetid = e.originalTarget.getAttribute('rel');
+             var target = document.getElementById(targetid);
+             if(target.classList.contains('open')) { target.classList.remove('open'); }
+             else { target.classList.add('open'); }
+             
+             };
+           if(first) { gallery.classList.add('open');first = false; }
+           
+           //var head = document.createElement("h2");
+           //head.innerText = label
+           //item.appendChild(head);
            
            
            //var details = document.createElement("details");
@@ -600,26 +647,36 @@
            
            
            
-           var cardgrp = document.createElement("div");
-           cardgrp.classList.add('cardgrp');
-           item.appendChild(cardgrp);
+           //var cardgrp = document.createElement("div");
+           //cardgrp.classList.add('cardgrp');
+           //item.appendChild(cardgrp);
+
 
            for(var k in items) {
+           
+           
               var o = {
                  "canvas":  items[k].id,
                  "manifest":  m.id,
                  "service": items[k].imageResources[0].getServices()[0].id,
                  "profile": items[k].imageResources[0].getServices()[0].getProfile(),
                  "thumbnail": items[k].getCanonicalImageUri(200),
-                 "label": items[k].getLabel().getValue()
+                 "label": items[k].getLabel().getValue(),
+                 "annotations": [],
+                 "next": "",
+                 "prev": ""
 	      }
+	      
+	      //console.log(o);
+	      
 	      this.items[o.canvas] = o;
 	      
               var card = document.createElement("a");
               card.classList.add('card');
               card.setAttribute("rel", o.canvas); 
               card.setAttribute("href","#");
-              cardgrp.appendChild(card); 
+              gallery.appendChild(card); 
+              
               card.addEventListener("click", (e) => {
                  var canvas = e.currentTarget.getAttribute('rel');
                  this.makeCardActive(e.currentTarget);
@@ -635,15 +692,22 @@
                 this.loaded = true;
                 //this.selectGalleryItem(o.canvas);
               }
-	      
            }
 
            
          }
        }
+
+
+
+
+
+
+
        
        drawOverlays(canvas) {
-         
+       
+ 
         const result = this.slides.filter(slide => slide.canvas == canvas);
         
         for(var i in result) {
@@ -652,22 +716,7 @@
 
        }
        
-    /*   
-    manuallyDrawOverlay() {
-        var id = "hf7f64h4frkif8";
-        var overlayElement = document.createElement("div");
-        overlayElement.className = "lowlight";
-        overlayElement.id = id;
-        overlayElement.style.border = "solid 5px red";
-        const pixelRect = new OpenSeadragon.Rect(10,10,400,400);
-        const viewportRect = this.viewer.viewport.imageToViewportRectangle(pixelRect);
-        this.viewer.addOverlay({
-            element: overlayElement,
-            location: viewportRect
-        });
-        console.log(overlayElement);
-    }       
-    */
+
     drawOverlay(o) {
     
         var id = this.makeid();
@@ -702,6 +751,22 @@
         */
     }
     
+    drawCaption(i, o) {
+    
+           var caption = this.domElement('div',this.makeid(),{"class": "caption", "contenteditable":"true"}, this.ui.tab_2, o.text);
+           this.domElement('span',"",{"class":"counter"}, caption, (parseInt(i)+1));
+           caption.addEventListener("click", (e) => {
+              e.target.setAttribute('contenteditable','true');
+           });
+           caption.addEventListener("blur", (e) => {
+              e.target.setAttribute('contenteditable', 'false');
+    
+              this.slides[i].text = e.target.textContent;
+              console.log("Updated caption:", e.target.textContent);
+           });
+
+    }
+    
     /************************************
     *
     ************************************/
@@ -721,6 +786,9 @@
        
          //this.ui.tab_1.innerHTML = metadataHtml;
          this.current = this.items[canvas];
+                  
+         this.getPrevNext(canvas, this.items);
+         
          this.setMetadata(this.current.manifest);
          //this.viewer.removeOverlay("overlay");
          this.isCropActive = false;
@@ -728,6 +796,25 @@
          this.showCropButton();
        }
        
+       /***************************
+       * 
+       ************************************/
+       getPrevNext(targetKey, object) {
+         const keys = Object.keys(object);
+         const index = keys.indexOf(targetKey);
+
+         if (index === -1) return null; // Key not found
+         
+         var prev = keys[index - 1] ? object[keys[index - 1]].canvas : null;
+         var next = keys[index + 1] ? object[keys[index + 1]].canvas : null;
+         
+         return {
+           previous: keys[index - 1] ? object[keys[index - 1]].canvas : null,
+           current: object[targetKey].canvas,
+           next: keys[index + 1] ? object[keys[index + 1]].canvas : null
+         };
+       }
+
 
 
        openModal(o) {
@@ -778,7 +865,6 @@
          this.viewer.removeOverlay("overlay");
          var tilesource = {
             type: 'image',
-            //url:  `${d.service}/${d.region}/1200,/0/default.jpg`
             url: image
          }
          this.isCropActive = false;
@@ -794,6 +880,8 @@
 
        drawSlides() {
          this.ui.slider.innerHTML = "";
+         this.ui.tab_2.innerHTML = "";
+         
          for(var i in this.slides) {
            var slide = this.domElement('a',this.makeid(),{"href":"#", "class": "card"}, this.ui.slider);
            slide.setAttribute("data-canvas", this.slides[i].canvas);
@@ -806,6 +894,10 @@
               var canvas = e.currentTarget.getAttribute('data-canvas');
               this.selectSlide(img);
            });
+           
+           // draw captions in right sidebar
+           this.drawCaption(i, this.slides[i]);
+           
          }
        } 
        
@@ -853,7 +945,7 @@
        }
        
        setMetadata(manifestid) { 
-           var metadata = this.manifests2[manifestid].getMetadata();
+           var metadata = this.manifests[manifestid].getMetadata();
            var metadataHtml = "";
            for( var i in metadata) {
              metadataHtml += `<strong>${metadata[i].getLabel()}</strong>  ${metadata[i].getValue()}<br />`;
@@ -939,8 +1031,11 @@
 	            slide.id = this.makeid();
 	            slide.region = this.region;
 	            slide.thumbnail = `${this.current.service}/${this.region}/330,/0/default.jpg`
-	            slide.caption = "";
+	            slide.caption = "This is the cooption";
+	            slide.tags = [];
+	            slide.text = "";
 	            this.slides.push(slide);
+	            //this.items[this.current.canvas].annotations.push(slide);
 	            this.drawSlides();
 	            this.toggleCrop();
 	            this.openStrip();
