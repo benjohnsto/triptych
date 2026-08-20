@@ -98,6 +98,17 @@
         .card img { max-width:90%; max-height:90%;margin: 0 auto; }
         .card.active { border:solid 4px red; } 
         
+        .card .tools {
+          position: absolute;
+          top: 0;
+          display: flex;
+          justify-content: space-between;
+          left: 0;
+          right: 0;
+          text-align: right;
+          }
+         .card .tools img { margin: unset; }
+        
         .caption-container { display:flex; }
         .caption {
           border: solid 1px black;
@@ -110,8 +121,8 @@
 
         .counter {
           background:black;
-          height:2em;
-          width:2em;
+          height: 36px;
+          width: 36px;
           border-radius:2em;
           color:white;
           text-decoration:none;
@@ -900,12 +911,32 @@
 
 
 
-
        drawSlides() {
          this.ui.slider.innerHTML = "";
          this.ui.tab_2.innerHTML = "";
          
          for(var i in this.slides) {
+         
+           var slide = this.domElement('div',this.makeid(),{"class":"card"}, this.ui.slider);
+           slide.setAttribute("data-canvas", this.slides[i].canvas);
+           slide.setAttribute("data-img",this.slides[i].thumbnail);
+           var toolbar = this.domElement('div',"",{"class":"tools"}, slide);
+           var counter = this.domElement('span',"",{"class":"counter"}, toolbar, (parseInt(i)+1));
+           var close   = this.domElement('img',"",{"src":"assets/images/close.svg"}, toolbar );
+           close.setAttribute("rel",i);
+           close.addEventListener("click", (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log(e);
+              var rel = e.target.getAttribute('rel');
+              this.slides.splice(rel, 1);
+              this.drawSlides();
+           });
+           var image   = this.domElement('img',"",{"title":this.slides[i].caption,"src":this.slides[i].thumbnail}, slide);
+           slide.addEventListener("click", (e) => {
+              alert('image clickt');
+           });
+         /*
            var slide = this.domElement('a',this.makeid(),{"href":"#", "class": "card"}, this.ui.slider);
            slide.setAttribute("data-canvas", this.slides[i].canvas);
            slide.setAttribute("data-img",this.slides[i].thumbnail);
@@ -917,7 +948,7 @@
               var canvas = e.currentTarget.getAttribute('data-canvas');
               this.selectSlide(img);
            });
-           
+          */ 
            // draw captions in right sidebar
            this.drawCaption(i, this.slides[i]);
            
