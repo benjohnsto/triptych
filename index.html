@@ -78,9 +78,10 @@
         
         #viewer { width:100%;height:100%;background:black; }
         
-        #prev { position:absolute;top:49%;left:30px; }
-        #next { position:absolute;top:49%;right:30px; }
+        #prev { position:absolute;top:49%;left:30px; background: transparent; border: none;}
+        #next { position:absolute;top:49%;right:30px;background: transparent; border: none; }
         
+        summary { cursor:pointer; }
         .card { 
           width: 30%;
           max-width:150px;
@@ -133,7 +134,7 @@
         }
         
                
-        .cardgrp { margin-top: 1em;display: flex;flex-wrap: wrap;overflow:hidden;height:0px;transition:height 1s; }
+        .cardgrp { margin-top: 1em;display: flex;flex-wrap: wrap; }
         .cardgrp.open { height:auto; transition:height 1s; }
         #overlay { border:solid 1px white; }
         .highlight { border:solid 1px white; }
@@ -231,14 +232,17 @@
         this.ui.viewerContainer.id = "viewer";
         container.appendChild(this.ui.viewerContainer);
         
-        this.ui.prev = this.domElement('button',"prev", {}, container, "PREV");
-        this.ui.next = this.domElement('button',"next", {}, container, "NEXT");
+        var prevanchor = this.domElement('a',"", {"href":"#"}, container);
+        this.ui.prev = this.domElement('img',"prev", {'src':'assets/images/prev.svg'}, prevanchor);
+        var nextanchor = this.domElement('a',"", {"href":"#"}, container);
+        this.ui.next = this.domElement('img',"next", {'src':'assets/images/next.svg'}, nextanchor);
         
         this.ui.prev.onclick = (e) => {
           var id = e.originalTarget.getAttribute('rel');
           this.selectCard(id);
         };
         this.ui.next.onclick = (e) => {
+          console.log(e);
           var id = e.originalTarget.getAttribute('rel');
           this.selectCard(id);
         };
@@ -635,28 +639,32 @@
            var label = m.getLabel().getValue();
            var items = m.getSequences()[0].getCanvases();
 
-           
-           //var item = document.createElement("a");
-           var item =    this.domElement('div', `${id}`, {}, this.ui.gallery);
-           var label =   this.domElement('a',"", {"href":"#","rel":`${id}-gallery`}, item, label);
+	   var item =    this.domElement('details', `${id}`, {}, this.ui.gallery);
+           var label =   this.domElement('summary',"", {}, item, label);
            var gallery = this.domElement('div',`${id}-gallery`, {"class":"cardgrp"}, item);
-           
+
            label.onclick = (e) => { 
-             //var cards = document.getElementsByClassName("cardgrp");
-             //for(var c = 0; c <= cards.length-1; c++) { console.log(cards[c]);cards[c].classList.remove('open'); }
              var targetid = e.originalTarget.getAttribute('rel');
              var target = document.getElementById(targetid);
              if(target.classList.contains('open')) { target.classList.remove('open'); }
              else { target.classList.add('open'); }
              
-             };
+           };
              
            if(first) { 
-             gallery.classList.add('open');
+             //gallery.classList.add('open');
+             item.setAttribute('open', true);
              first = false;
              this.viewer.open(items[0].imageResources[0].getServices()[0].id);
            }
            
+/*
+           var item =    this.domElement('div', `${id}`, {}, this.ui.gallery);
+           var label =   this.domElement('a',"", {"href":"#","rel":`${id}-gallery`}, item, label);
+           var gallery = this.domElement('div',`${id}-gallery`, {"class":"cardgrp"}, item);
+           
+
+*/           
            //var head = document.createElement("h2");
            //head.innerText = label
            //item.appendChild(head);
@@ -812,15 +820,16 @@
     
        selectCard(eleId) {
            
-          //if(this.mode === "slides") { this.hideCropButton(); } else { this.showCropButton(); }
-          
+          console.log(eleId);
           this.current = this[this.mode][eleId];
           
           var next = this.getNext(eleId);
           var prev = this.getPrev(eleId);
+          console.log(this.ui.next);
           this.ui.next.setAttribute('rel', next);
           this.ui.prev.setAttribute('rel', prev);
-          
+          console.log('next',next);
+          console.log('prev',prev);
           if(next === null) { this.hideNextButton(); } else { this.showNextButton();  }
           if(prev === null) { this.hidePrevButton();  } else { this.showPrevButton();  }
           
