@@ -811,13 +811,13 @@
     
     
        selectCard(eleId) {
-       
-          if(this.mode === "slides") { this.hideCropButton(); } else { this.showCropButton(); }
+           
+          //if(this.mode === "slides") { this.hideCropButton(); } else { this.showCropButton(); }
+          
           this.current = this[this.mode][eleId];
           
           var next = this.getNext(eleId);
           var prev = this.getPrev(eleId);
-          console.log(prev);
           this.ui.next.setAttribute('rel', next);
           this.ui.prev.setAttribute('rel', prev);
           
@@ -835,13 +835,13 @@
               type: 'image',
               url: this.slides[eleId].thumbnail
             }
+            
             this.setStage(tilesource, false);
           }
 
           var ele = document.getElementById(eleId);
           this.makeCardActive(ele);
-          this.showCropButton();
-          
+         
 
        }
        
@@ -924,51 +924,12 @@
 
        }
 
-       
-       /*
-       selectSlide(eleId) {
-         this.viewer.removeOverlay("overlay");
-         var tilesource = {
-            type: 'image',
-            url: image
-         }
-         this.isCropActive = false;
-         this.viewer.open(tilesource);
-         this.openStrip();
-         this.hideCropButton();
-       }
-       */
-       
-        /*      
-       selectSliderItem(eleId) {
-
-          var ele = document.getElementById(eleId);
-
-          this.makeCardActive(ele);
-          var tilesource = {
-              type: 'image',
-              url: this.slides[eleId].thumbnail
-          }
-          var actors = this.getPrevNext(eleId, this.slides);
-          this.setStage(tilesource, actors, false );
-
-         this.viewer.open("");
-         //var d = this.items[canvas];
-         this.viewer.removeOverlay("overlay");
-
-         this.isCropActive = false;
-         this.viewer.open(tilesource);
-         this.openStrip();
-         //this.closeStrip();
-         this.hideCropButton();
-
-       }
-        */      
+   
 
        setStage(tilesource, showCrop) {
           this.viewer.open(tilesource);
           this.setMetadata(this.current.manifest);
-          var sc = (showCrop === true) ? this.showCropButton() : this.hideCropButton();
+          if(showCrop) { this.showCropButton(); } else { this.hideCropButton(); }
           
           this.isCropActive = false;
        }
@@ -991,6 +952,7 @@
          this.ui.cropButton.element.style.display = "inline-block";
        }
        hideCropButton() {
+         console.log('hiding');
          this.ui.cropButton.element.style.display = "none";
        }
 
